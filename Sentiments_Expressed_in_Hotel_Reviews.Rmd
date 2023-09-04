@@ -1,0 +1,217 @@
+---
+title: "Benchmark – Sentiments Expressed in Hotel Reviews"
+author: "Reeve Paul"
+date: "2023-02-15"
+output: html_document
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Importing Libraries
+
+```{r}
+library(ggplot2)
+library(tidytext)
+library(syuzhet)
+library(dplyr)
+library(tibble)
+library(reshape2)
+
+```
+
+## Importing the Data
+
+```{r}
+hotel1 <- read.csv("C:\\Users\\reeve\\OneDrive\\Desktop\\DSC-570\\DSC-570-R-hotel1 (1).csv")
+hotel2 <- read.csv("C:\\Users\\reeve\\OneDrive\\Desktop\\DSC-570\\DSC-570-R-hotel2 (1).csv")
+hotel3 <- read.csv("C:\\Users\\reeve\\OneDrive\\Desktop\\DSC-570\\DSC-570-R-hotel3 (1).csv")
+```
+
+
+## Exploring and Cleaning the Data
+
+```{r}
+head(hotel1)
+head(hotel2)
+head(hotel3)
+```
+
+As can be seen above, the datasets for all the hotels contain two columns consisting of the hotel name and the respective review. In order to use the get_sentences() function, the dataframe should be manipulated to have one column for the review text, and one row per review. So, the second column will be extracted into a new dataframe for this purpose.
+
+It is then possible to convert the reviews into sets of sentences using get_sentences(). An example of the sentences from the hotel 1 reviews can be seen below.
+
+```{r}
+
+# Convert review text into sets of sentences
+sentences1 <- lapply(hotel1[,2], function(x) get_sentences(x))
+sentences1 <- melt(sentences1)
+sentences1 <- sentences1 %>% mutate(row_number = row_number())
+
+colnames(sentences1) <- c("review","L1","id")
+
+
+
+sentences2 <- lapply(hotel2[,2], function(x) get_sentences(x))
+sentences2 <- melt(sentences2)
+sentences2 <- sentences2 %>% mutate(row_number = row_number())
+
+colnames(sentences2) <- c("review","L1","id")
+
+
+sentences3 <- lapply(hotel3[,2], function(x) get_sentences(x))
+sentences3 <- melt(sentences3)
+sentences3 <- sentences3 %>% mutate(row_number = row_number())
+
+colnames(sentences3) <- c("review","L1","id")
+
+
+head(sentences1)
+
+```
+
+## Sentiment model
+
+The sentiment model below splits each review into words and assigns a numeric sentiment score to each word using the "AFINN" lexicon. The sentiment score for each word is added together to find the sentiment score of the review. Positive scores indicate positive sentiment, and negative scores indicate negative sentiment. Additionally, words that are not in the lexicon are excluded from the data frame.
+
+```{r}
+
+words1 <- sentences1 %>%
+  unnest_tokens(word, review)
+
+sentiments1 <- words1 %>%
+  inner_join(get_sentiments("afinn"), by = "word")
+
+review_sentiments1 <- sentiments1 %>%
+  group_by(id) %>%
+  summarise(sentiment = sum(value))
+
+review_scores1 <- left_join(sentences1, review_sentiments1, by = "id")
+review_scores1 = subset(review_scores1, select = -c(L1,id) )
+
+
+
+words2 <- sentences2 %>%
+  unnest_tokens(word, review)
+
+sentiments2 <- words2 %>%
+  inner_join(get_sentiments("afinn"), by = "word")
+
+review_sentiments2 <- sentiments2 %>%
+  group_by(id) %>%
+  summarise(sentiment = sum(value))
+
+review_scores2 <- left_join(sentences2, review_sentiments2, by = "id")
+review_scores2 = subset(review_scores2, select = -c(L1,id) )
+
+
+
+words3 <- sentences3 %>%
+  unnest_tokens(word, review)
+
+sentiments3 <- words3 %>%
+  inner_join(get_sentiments("afinn"), by = "word")
+
+review_sentiments3 <- sentiments3 %>%
+  group_by(id) %>%
+  summarise(sentiment = sum(value))
+
+review_scores3 <- left_join(sentences3, review_sentiments3, by = "id")
+review_scores3 = subset(review_scores3, select = -c(L1,id) )
+
+
+head(review_scores1, 10)
+head(review_scores2, 10)
+head(review_scores3, 10)
+
+
+```
+
+## Most Positive and Negative Reviews for Each Hotel
+
+The most positive review for hotel1 is "The common area is nice and fun with a pool table and a small cinema room" with a sentiment score of 7. The most negative is "When we got there there was a mixup with our reservation and they took care of it right away." with a sentiment score of 2
+
+The most positive review for hotel2 is "Breakfast was the best, and the best thing about the stay was the one and only host, great conversations at breakfast and advise on the city" with a sentiment score of 9. The most negative is "Sharing the bathroom, never a problem, and coming in and out with you wanted never a problem" with a sentiment score of -4.
+
+The most positive review for hotel3 is "Nice and peaceful" with a sentiment score of 5. The most negative is "Not a bad stay , hotel could use a remodel" with a sentiment score of -3.
+
+## Measures of Central Tendency and Visualization
+
+Before continuing with measure of central tendencies, the rows with null values must be deleted. The null values are a result of the words in the review not being part of the "AFFIN" lexicon.
+
+```{r}
+review_scores1 <- na.omit(review_scores1)
+review_scores2 <- na.omit(review_scores2)
+review_scores3 <- na.omit(review_scores3)
+
+mean_1 <- mean(review_scores1$sentiment)
+mean_2 <- mean(review_scores2$sentiment)
+mean_3 <- mean(review_scores3$sentiment)
+
+median_1 <- median(review_scores1$sentiment)
+median_2 <- median(review_scores2$sentiment)
+median_3 <- median(review_scores3$sentiment)
+
+# define a function to calculate the mode of a vector
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+mode_1 <- Mode(review_scores1$sentiment)
+mode_2 <- Mode(review_scores2$sentiment)
+mode_3 <- Mode(review_scores3$sentiment)
+
+print(paste("Mean of hotel 1: ", mean_1))
+print(paste("Mean of hotel 2: ", mean_2))
+print(paste("Mean of hotel 3: ", mean_3))
+print(paste("Median of hotel 1: ", median_1))
+print(paste("Median of hotel 2: ", median_2))
+print(paste("Median of hotel 3: ", median_3))
+print(paste("Mode of hotel 1: ", mode_1))
+print(paste("Mode of hotel 2: ", mode_2))
+print(paste("Mode of hotel 3: ", mode_3))
+
+plot(review_scores1$sentiment) 
+simple_plot(review_scores1$sentiment)
+plot(review_scores2$sentiment)
+simple_plot(review_scores2$sentiment)
+plot(review_scores3$sentiment)
+simple_plot(review_scores3$sentiment)
+
+```
+
+## Results
+
+Based on the sentiment scores, it seems the model does a pretty decent job of identifying whether the review is positive or negative. Based on the central tendency measures, and scatter plots, it appears the reviews are overall positive. Although the model does a good job, it seems it it could do better when there is more text to analyze in a review. Additionally, the model is also hindered slightly due to the fact a lot of the review lexicon is not included in the "AFINN" lexicon. 
+
+Below, the Discrete Cosine Similarity is conducted. For the managers of the hotels, the results of the DCT can be useful for identifying patterns in the overall emotional tone of a text
+
+### Getting the Discrete Cosine Transform of the Text Data
+
+```{r}
+dct1 <- get_dct_transform(review_scores1$sentiment)
+
+dct2 <- get_dct_transform(review_scores2$sentiment)
+
+dct3 <- get_dct_transform(review_scores3$sentiment)
+
+
+plot(dct1)
+plot(dct2, col = "red")
+plot(dct3, col = "green")
+
+```
+
+## Ethical Practices : Possible Abuses and Examples
+
+Sentiment analysis, as used in this project, involves analyzing the emotional tone of text, such as whether a statement is positive, negative, or neutral. While sentiment analysis has many potential benefits, such as helping hotels gauge public opinion on their services, there are also several possible abuses that might occur due to sentiment analysis of text. Two possible abuses include discrimination and misrepresentation.
+
+Discrimination: Sentiment analysis may be used to discriminate against individuals based on their race, ethnicity, gender, sexual orientation, or other characteristics. For example, a sentiment analysis tool might classify certain types of language as "negative" or "threatening" and be used to flag individuals for further scrutiny or exclusion.
+
+Misrepresentation: Sentiment analysis may be used to misrepresent the true emotional tone of a message or text. For example, a political campaign might use sentiment analysis to spin negative feedback about their candidate into positive sentiment, or to discredit negative sentiment about their opponent. As can be seen in this project, some of the hotel reviews read as an overall poitive review but the sentiment score was negative. This is misrepresentative of the actual review.
+
+
