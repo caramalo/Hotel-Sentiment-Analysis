@@ -1,5 +1,5 @@
 ---
-title: "Benchmark – Sentiments Expressed in Hotel Reviews"
+title: "Sentiments Expressed in Hotel Reviews"
 author: "Reeve Paul"
 output: html_document
 ---
@@ -22,12 +22,17 @@ library(reshape2)
 
 ```
 
-## Importing the Data
+branch <- "main"
 
-```{r}
-hotel1 <- read.csv("C:\\Users\\reeve\\OneDrive\\Desktop\\DSC-570\\DSC-570-R-hotel1 (1).csv")
-hotel2 <- read.csv("C:\\Users\\reeve\\OneDrive\\Desktop\\DSC-570\\DSC-570-R-hotel2 (1).csv")
-hotel3 <- read.csv("C:\\Users\\reeve\\OneDrive\\Desktop\\DSC-570\\DSC-570-R-hotel3 (1).csv")
+# Define the raw file URLs
+csv_url1 <- paste0("https://raw.githubusercontent.com/caramalo/Hotel-Sentiment-Analysis/", branch, "/hotel1.csv")
+csv_url2 <- paste0("https://raw.githubusercontent.com/caramalo/Hotel-Sentiment-Analysis/", branch, "/hotel2.csv")
+csv_url3 <- paste0("https://raw.githubusercontent.com/caramalo/Hotel-Sentiment-Analysis/", branch, "/hotel3.csv")
+
+# Read CSV files from the raw file URLs
+hotel1 <- read.csv(url(csv_url1))
+hotel2 <- read.csv(url(csv_url2))
+hotel3 <- read.csv(url(csv_url3))
 ```
 
 
