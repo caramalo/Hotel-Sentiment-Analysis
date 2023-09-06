@@ -1,0 +1,25 @@
+name: Render R Markdown to HTML
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up R
+      uses: r-lib/actions/setup-r@v1
+      with:
+        r-version: 4.x
+
+    - name: Install R packages
+      run: Rscript -e 'install.packages(c("rmarkdown", "ggplot2", "tidytext", "syuzhet", "dplyr", "tibble", "reshape2"))'
+
+    - name: Render R Markdown
+      run: Rscript -e 'rmarkdown::render("Sentiments_Expressed_in_Hotel_Reviews.Rmd")'
