@@ -1,0 +1,29 @@
+name: Build and Deploy
+on:
+  push:
+    branches:
+      - main  # Change this to your main branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v1
+        with:
+          r-version: 4.x  # Specify your preferred R version
+
+      - name: Install dependencies
+        run: R -e 'install.packages("rmarkdown")'
+
+      - name: Build site
+        run: R -e 'rmarkdown::render("Sentiments_Expressed_in_Hotel_Reviews.Rmd")'
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
